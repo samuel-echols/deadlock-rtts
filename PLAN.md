@@ -147,15 +147,3 @@ Goal: a public, self-sustaining service.
 
 **Acceptance:** public URL is live; CI is green; ingestion runs on schedule in
 prod; backups are configured and verified once.
-
----
-
-## Phase 6 — Depth (stretch, portfolio-boosting)
-
-- Python + pyarrow backfill from the daily dumps to seed historical per-patch
-  aggregates (so history predates when the daily job started).
-- Range-partition fact tables by `snapshot_date`; add confidence intervals to
-  rates; finer rank/timing dimensions.
-
-**Acceptance:** historical charts extend back before the app's first run day;
-partitioned tables query efficiently under load.
