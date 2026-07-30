@@ -1,18 +1,18 @@
 # Deadlock Meta History
 
-A web app that tracks how Deadlock's meta changes **over time** — hero and item win/pick rates as a time-series across patches, annotated with patch notes and a "what this patch actually changed" impact report.
+A web app that tracks how Deadlock's meta evolves **over time** — hero and item win/pick rates as a time-series across patches, annotated with patch notes and a "what this patch actually changed" impact report.
 
-**Differentiator:** existing trackers show the *current* meta. This app accumulates and serves *change over time*.
+**Differentiator:** existing trackers show the *current* meta. This app accumulates and serves the *change over time*.
 
-> Data provided by [deadlock-api.com](https://deadlock-api.com) — open-source community API (MIT licence). Not affiliated with Valve.
+> Data provided by [deadlock-api.com](https://deadlock-api.com), an open-source community API (MIT license). Not affiliated with Valve.
 
 ---
 
 ## Features
 
 - **Hero Trend** — win-rate over time chart with patch boundary annotations
-- **Movers Board** — biggest hero win-rate risers and fallers this patch
-- **Patch Diff** — per-hero win-rate delta vs previous patch for any given patch
+- **Movers Board** — the biggest hero win-rate risers and fallers this patch
+- **Patch Diff** — per-hero win-rate delta versus the previous patch, for any given patch
 
 ## Stack
 
@@ -44,7 +44,7 @@ docker compose up postgres -d
 cd frontend && npm run dev
 ```
 
-Open `http://localhost:5173`.
+Then open `http://localhost:5173`.
 
 ### Run tests
 
@@ -71,12 +71,12 @@ Browser → React SPA (Vite / served by Spring Boot)
 
 ## Deployment
 
-See [AWS Setup Guide](docs/aws-setup.md) for full provisioning steps.
+See the [AWS Setup Guide](docs/aws-setup.md) for full provisioning steps.
 
-CI/CD is handled by GitHub Actions (`.github/workflows/ci.yml`):
+CI/CD runs through GitHub Actions (`.github/workflows/ci.yml`):
 - Every push: build + test
-- Push to `main`: build Docker image → push to ECR → SSH deploy to EC2
+- Push to `main`: build the Docker image, push to ECR, then deploy to EC2 over SSH
 
 ## Attribution
 
-This project consumes data from **[deadlock-api.com](https://deadlock-api.com)**, an open-source (MIT) community API for Deadlock game data maintained by volunteers. Please consider contributing or supporting the project.
+This project consumes data from **[deadlock-api.com](https://deadlock-api.com)**, an open-source (MIT-licensed) community API for Deadlock game data maintained by volunteers. Please consider contributing to or supporting that project.
