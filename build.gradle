@@ -1,0 +1,68 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'dim'
+version = '0.0.1-SNAPSHOT'
+description = 'DeadLockRTS'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.testcontainers:testcontainers-bom:1.20.1'
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+
+    runtimeOnly 'org.postgresql:postgresql'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.1.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+def npmCmd = System.getProperty('os.name').toLowerCase().contains('win') ? 'npm.cmd' : 'npm'
+
+task npmInstall(type: Exec) {
+    workingDir 'frontend'
+    commandLine npmCmd, 'install'
+    inputs.file 'frontend/package-lock.json'
+    outputs.dir 'frontend/node_modules'
+}
+
+task buildFrontend(type: Exec, dependsOn: npmInstall) {
+    workingDir 'frontend'
+    commandLine npmCmd, 'run', 'build'
+    inputs.dir 'frontend/src'
+    inputs.file 'frontend/vite.config.ts'
+    outputs.dir 'src/main/resources/static'
+}
+
+processResources.dependsOn buildFrontend

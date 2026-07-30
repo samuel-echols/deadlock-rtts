@@ -1,0 +1,2 @@
+deadlock-api:
+  base-url: ${wiremock.server.baseUrl}

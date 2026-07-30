@@ -1,0 +1,75 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f1117;
+  color: #e2e8f0;
+  min-height: 100vh;
+}
+
+a { color: #63b3ed; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+nav {
+  background: #1a1f2e;
+  border-bottom: 1px solid #2d3748;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: 52px;
+}
+
+nav .brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #f6e05e;
+  margin-right: auto;
+}
+
+nav a { color: #a0aec0; font-size: 0.9rem; }
+nav a.active, nav a:hover { color: #e2e8f0; }
+
+main { padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+
+h1 { font-size: 1.4rem; margin-bottom: 1rem; color: #f6e05e; }
+h2 { font-size: 1.1rem; margin-bottom: 0.75rem; color: #cbd5e0; }
+
+.card {
+  background: #1a1f2e;
+  border: 1px solid #2d3748;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+select {
+  background: #2d3748;
+  color: #e2e8f0;
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+th { text-align: left; padding: 0.5rem 0.75rem; color: #718096; border-bottom: 1px solid #2d3748; }
+td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #1e2535; }
+tr:last-child td { border-bottom: none; }
+
+.positive { color: #68d391; }
+.negative { color: #fc8181; }
+.neutral  { color: #a0aec0; }
+
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: #4a5568;
+  font-size: 0.8rem;
+  border-top: 1px solid #2d3748;
+  margin-top: 2rem;
+}
+
+.loading { color: #718096; padding: 2rem 0; }
+.error   { color: #fc8181; padding: 2rem 0; }
