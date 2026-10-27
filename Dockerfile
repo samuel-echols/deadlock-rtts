@@ -1,3 +1,11 @@
+FROM node:22 AS frontend
+WORKDIR /app/frontend
+
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend ./
+RUN npm run build
+
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
@@ -5,10 +13,10 @@ COPY gradlew .
 COPY gradle gradle
 COPY build.gradle .
 COPY settings.gradle .
-COPY frontend frontend
 COPY src src
+COPY --from=frontend /app/src/main/resources/static src/main/resources/static
 
-RUN ./gradlew bootJar -x test --no-daemon
+RUN ./gradlew bootJar -x test -x buildFrontend --no-daemon
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
