@@ -25,4 +25,3 @@ ORDER BY ABS(win_rate - prev_win_rate) DESC;
 
 CREATE UNIQUE INDEX uq_hero_movers_hero_patch_mv
     ON hero_movers (hero_id, patch_id);
-6

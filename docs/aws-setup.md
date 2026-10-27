@@ -121,11 +121,12 @@ Create the app directory, then from your **local machine** copy the prod files:
 
 ```bash
 # Run these on your local machine
+ssh -i ~/.ssh/deadlock-ec2-key.pem ec2-user@YOUR_EC2_IP "mkdir -p ~/app/scripts"
 scp -i ~/.ssh/deadlock-ec2-key.pem docker-compose.prod.yml \
   ec2-user@YOUR_EC2_IP:/home/ec2-user/app/
 scp -i ~/.ssh/deadlock-ec2-key.pem scripts/backup.sh scripts/deploy.sh \
   ec2-user@YOUR_EC2_IP:/home/ec2-user/app/scripts/
-ssh ec2-user@YOUR_EC2_IP "mkdir -p ~/app/scripts && chmod +x ~/app/scripts/*.sh"
+ssh -i ~/.ssh/deadlock-ec2-key.pem ec2-user@YOUR_EC2_IP "chmod +x ~/app/scripts/*.sh"
 ```
 
 ---
