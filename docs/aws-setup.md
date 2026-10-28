@@ -225,49 +225,100 @@ docker compose -f docker-compose.prod.yml up -d
 
 ---
 
-## 9. Set up automated backups (optional)
+## 9. Set up automated backups
+
+The snapshot history can't be re-fetched from the API, so back it up.
 
 ### Create an S3 bucket
 
 1. Go to **S3** → **Create bucket**
-2. Name: `deadlock-meta-history-backups` (must be globally unique — add your account ID suffix if needed)
+2. Name: `deadlock-meta-history-backups-<account-id>` (bucket names are global; the account ID suffix keeps it unique)
 3. Region: `us-east-1`
-4. Block all public access: **on** (default)
+4. Block all public access: **on** (default), default encryption unchanged
 5. Click **Create bucket**
 
-### Grant EC2 access to S3
+### Expire old backups
+
+Retention is a lifecycle rule, so the EC2 role never needs delete permission.
+
+1. Open the bucket → **Management** → **Create lifecycle rule**
+2. Name: `expire-after-30-days`, apply to all objects (tick the acknowledgement)
+3. Check **Expire current versions of objects** → 30 days → **Create rule**
+
+### Grant EC2 access to the bucket
 
 1. Go to **IAM** → **Roles** → `deadlock-ec2-role` → **Add permissions** → **Create inline policy**
-2. Switch to the **JSON** editor and paste:
+2. Switch to the **JSON** editor and paste (replace `<account-id>`):
 ```json
 {
   "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": ["s3:PutObject", "s3:ListBucket", "s3:DeleteObject"],
-    "Resource": [
-      "arn:aws:s3:::deadlock-meta-history-backups",
-      "arn:aws:s3:::deadlock-meta-history-backups/*"
-    ]
-  }]
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject"],
+      "Resource": "arn:aws:s3:::deadlock-meta-history-backups-<account-id>/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::deadlock-meta-history-backups-<account-id>"
+    }
+  ]
 }
 ```
-3. Name the policy `S3BackupWrite` → **Create policy**
+3. **Next** → name it `S3BackupAccess` → **Create policy**
+
+Check from the instance: `aws s3 ls s3://deadlock-meta-history-backups-<account-id>/` should succeed (empty output).
 
 ### Schedule the backup on EC2
 
-SSH into EC2 and install `pg_dump`, then set up the cron job:
+SSH into EC2. Amazon Linux 2023 ships without `pg_dump` or cron. The client's major
+version must be at least the RDS engine's (check RDS → Configuration → Engine version;
+ours is 18), or `pg_dump` aborts with a version mismatch:
 
 ```bash
-sudo dnf install -y postgresql16
-
-crontab -e
+sudo dnf install -y postgresql18 cronie
+sudo systemctl enable --now crond
 ```
 
-Add this line (replace the placeholder values):
+Store the DB password in `~/.pgpass` (never in the crontab) and the rest in `~/backup.env`:
+
+```bash
+echo 'your-rds-endpoint.rds.amazonaws.com:5432:deadlock:deadlock:YOUR_PASSWORD' > ~/.pgpass
+chmod 600 ~/.pgpass
+
+cat > ~/backup.env <<'EOF'
+DB_HOST=your-rds-endpoint.rds.amazonaws.com
+DB_NAME=deadlock
+DB_USER=deadlock
+S3_BUCKET=deadlock-meta-history-backups-<account-id>
+EOF
 ```
-0 3 * * * DB_HOST=your-rds-endpoint.rds.amazonaws.com DB_NAME=deadlock DB_USER=deadlock PGPASSWORD=YOUR_PASSWORD S3_BUCKET=deadlock-meta-history-backups /home/ec2-user/app/scripts/backup.sh >> /var/log/deadlock-backup.log 2>&1
+
+`scripts/` is copied to the instance once (step 4), not on every deploy — re-copy `backup.sh` after changing it.
+
+Schedule it after the 04:00 UTC ingestion (`crontab -e`):
 ```
+0 5 * * * set -a; . $HOME/backup.env; $HOME/app/scripts/backup.sh >> $HOME/backup.log 2>&1
+```
+
+### Verify a restore once
+
+A backup you haven't restored isn't a backup. Run it by hand, then restore into a throwaway container and compare row counts with RDS:
+
+```bash
+set -a; . ~/backup.env; ~/app/scripts/backup.sh
+KEY=$(aws s3 ls "s3://$S3_BUCKET/" | sort | tail -1 | awk '{print $4}')
+aws s3 cp "s3://$S3_BUCKET/$KEY" /tmp/restore.sql.gz
+docker run -d --rm --name restore-test -e POSTGRES_PASSWORD=x postgres:18
+sleep 5
+gunzip -c /tmp/restore.sql.gz | docker exec -i restore-test psql -U postgres -q -v ON_ERROR_STOP=1
+docker exec restore-test psql -U postgres -c "SELECT count(*) FROM hero_stats_snapshot"
+psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "SELECT count(*) FROM hero_stats_snapshot"
+docker stop restore-test && rm /tmp/restore.sql.gz
+```
+
+The restore may log `role "deadlock" does not exist` for ownership statements; that's expected in a scratch container.
 
 ---
 
