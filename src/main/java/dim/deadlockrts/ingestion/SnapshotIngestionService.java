@@ -37,19 +37,20 @@ public class SnapshotIngestionService {
 
     @Transactional
     public void ingest() {
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
-        long dayStart = today.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-        long dayEnd = today.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+        // Snapshot the last complete UTC day; today's window is still filling up.
+        LocalDate day = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        long dayStart = day.atStartOfDay(ZoneOffset.UTC).toEpochSecond();
+        long dayEnd = day.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond();
 
-        log.info("Starting snapshot ingestion for {}", today);
+        log.info("Starting snapshot ingestion for {}", day);
 
         int patchId = resolveCurrentPatch();
         log.info("Current patch_id={}", patchId);
 
-        ingestHeroStats(today, patchId, dayStart, dayEnd);
-        ingestItemStats(today, patchId, dayStart, dayEnd);
+        ingestHeroStats(day, patchId, dayStart, dayEnd);
+        ingestItemStats(day, patchId, dayStart, dayEnd);
 
-        log.info("Snapshot ingestion complete for {}", today);
+        log.info("Snapshot ingestion complete for {}", day);
     }
 
     private int resolveCurrentPatch() {

@@ -60,35 +60,27 @@ public class AnalyticsQueryService {
 
     public List<PatchDiffPoint> patchDiff(int patchId) {
         return jdbc.query("""
-                WITH prev AS (
-                    SELECT hero_id, win_rate AS prev_win_rate, patch_id AS prev_patch_id
-                    FROM hero_stats_snapshot
-                    WHERE patch_id = (SELECT MAX(patch_id) FROM patches WHERE patch_id < ?)
-                      AND rank_bucket = 0
-                )
-                SELECT s.hero_id, h.display_name, s.win_rate,
-                       prev.prev_win_rate,
-                       (s.win_rate - prev.prev_win_rate) AS delta
-                FROM hero_stats_snapshot s
-                JOIN heroes h ON h.hero_id = s.hero_id
-                LEFT JOIN prev ON prev.hero_id = s.hero_id
-                WHERE s.patch_id = ? AND s.rank_bucket = 0
-                ORDER BY delta DESC NULLS LAST
+                SELECT hero_id, display_name, win_rate, prev_win_rate, win_rate_delta
+                FROM hero_movers
+                WHERE patch_id = ?
+                ORDER BY win_rate_delta DESC NULLS LAST
                 """,
                 (rs, i) -> new PatchDiffPoint(
                         rs.getInt("hero_id"),
                         rs.getString("display_name"),
                         rs.getBigDecimal("win_rate"),
                         rs.getBigDecimal("prev_win_rate"),
-                        rs.getBigDecimal("delta")
+                        rs.getBigDecimal("win_rate_delta")
                 ),
-                patchId, patchId);
+                patchId);
     }
 
     public List<MoverPoint> movers(int limit) {
         return jdbc.query("""
                 SELECT hero_id, display_name, patch_id, win_rate, prev_win_rate, win_rate_delta
                 FROM hero_movers
+                WHERE patch_id = (SELECT patch_id FROM patches ORDER BY build_number DESC LIMIT 1)
+                  AND win_rate_delta IS NOT NULL
                 ORDER BY ABS(win_rate_delta) DESC
                 LIMIT ?
                 """,

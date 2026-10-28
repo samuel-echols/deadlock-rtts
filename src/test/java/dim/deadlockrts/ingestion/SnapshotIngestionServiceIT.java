@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -19,6 +20,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 import com.github.tomakehurst.wiremock.WireMockServer;
+
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,6 +54,8 @@ class SnapshotIngestionServiceIT {
     @Autowired ItemRepository itemRepository;
     @Autowired HeroStatsSnapshotRepository heroSnapshotRepo;
     @Autowired ItemStatsSnapshotRepository itemSnapshotRepo;
+    @Autowired IngestionJob ingestionJob;
+    @Autowired CacheManager cacheManager;
 
     @BeforeEach
     void setUp() {
@@ -107,5 +113,39 @@ class SnapshotIngestionServiceIT {
         ingestionService.ingest();
 
         assertThat(heroSnapshotRepo.findAll().get(0).getPatchId()).isPositive();
+    }
+
+    @Test
+    void ingest_snapshotsYesterdaysFullUtcDay() {
+        LocalDate yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        String start = String.valueOf(yesterday.atStartOfDay(ZoneOffset.UTC).toEpochSecond());
+        String end = String.valueOf(yesterday.plusDays(1).atStartOfDay(ZoneOffset.UTC).toEpochSecond());
+
+        ingestionService.ingest();
+
+        assertThat(heroSnapshotRepo.findAll().get(0).getSnapshotDate()).isEqualTo(yesterday);
+        for (String path : new String[]{"/v1/analytics/hero-stats", "/v1/analytics/item-stats"}) {
+            wireMock.verify(getRequestedFor(urlPathEqualTo(path))
+                    .withQueryParam("min_unix_timestamp", equalTo(start))
+                    .withQueryParam("max_unix_timestamp", equalTo(end)));
+        }
+    }
+
+    @Test
+    void ingestionJob_clearsAnalyticsCaches() {
+        wireMock.stubFor(get(urlPathEqualTo("/v1/assets/heroes"))
+                .willReturn(okJson("""
+                        [{"id":1,"class_name":"hero_infernus","name":"Infernus"}]
+                        """)));
+        wireMock.stubFor(get(urlPathEqualTo("/v1/assets/items"))
+                .willReturn(okJson("""
+                        [{"id":4204808176,"class_name":"upgrade_extra_health","name":"Extra Health"}]
+                        """)));
+        cacheManager.getCache("movers").put(20, "stale");
+
+        ingestionJob.run();
+
+        assertThat(cacheManager.getCache("movers").get(20)).isNull();
+        assertThat(heroSnapshotRepo.count()).isEqualTo(1);
     }
 }
