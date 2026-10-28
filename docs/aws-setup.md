@@ -47,7 +47,12 @@ You'll need the contents of this file for the `EC2_SSH_KEY` GitHub secret later.
 7. Leave storage as default (8 GB gp3 is fine)
 8. Click **Launch instance**
 
-Once running, click the instance → copy the **Public IPv4 address**. This is your `EC2_HOST`.
+Once running, give it a stable address — the auto-assigned public IP changes whenever the instance is stopped and started:
+
+1. **EC2 → Network & Security → Elastic IPs** → **Allocate Elastic IP address** → Amazon's pool → **Allocate**
+2. Select it → **Actions → Associate Elastic IP address** → Resource type **Instance** → pick the instance → **Associate**
+
+The Elastic IP is your `EC2_HOST`. No extra cost while attached to a running instance (all public IPv4 is billed the same), but an allocated, unattached Elastic IP is still billed — release it if you tear the instance down.
 
 ---
 
@@ -170,7 +175,7 @@ Create a GitHub repository (if you haven't already), then go to **Settings → S
 |---|---|
 | `AWS_ACCESS_KEY_ID` | Access Key ID from step 6 |
 | `AWS_SECRET_ACCESS_KEY` | Secret Access Key from step 6 |
-| `EC2_HOST` | EC2 public IP from step 2b |
+| `EC2_HOST` | Elastic IP from step 2b |
 | `EC2_SSH_KEY` | Full contents of `deadlock-ec2-key.pem` (including `-----BEGIN...` and `-----END...` lines) |
 | `DB_HOST` | RDS endpoint from step 3b |
 | `DB_NAME` | `deadlock` |
