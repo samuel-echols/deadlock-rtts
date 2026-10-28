@@ -59,7 +59,7 @@ class SnapshotIngestionServiceIT {
         heroRepository.deleteAll();
 
         heroRepository.save(new Hero(1, "hero_infernus", "Infernus"));
-        itemRepository.save(new Item(7409189, "upgrade_extra_health", "Extra Health"));
+        itemRepository.save(new Item(4204808176L, "upgrade_extra_health", "Extra Health"));
 
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/client-versions"))
                 .willReturn(okJson("[6634, 6635, 6636, 6637]")));
@@ -71,7 +71,7 @@ class SnapshotIngestionServiceIT {
 
         wireMock.stubFor(get(urlPathEqualTo("/v1/analytics/item-stats"))
                 .willReturn(okJson("""
-                        [{"item_id":7409189,"bucket":0,"wins":300,"losses":200,"matches":500,"players":400,"avg_buy_time_s":825.3}]
+                        [{"item_id":4204808176,"bucket":0,"wins":300,"losses":200,"matches":500,"players":400,"avg_buy_time_s":825.3}]
                         """)));
     }
 
@@ -89,7 +89,7 @@ class SnapshotIngestionServiceIT {
         assertThat(heroSnap.getLosses()).isEqualTo(400);
 
         var itemSnap = itemSnapshotRepo.findAll().get(0);
-        assertThat(itemSnap.getItemId()).isEqualTo(7409189);
+        assertThat(itemSnap.getItemId()).isEqualTo(4204808176L);
         assertThat(itemSnap.getMatches()).isEqualTo(500);
     }
 

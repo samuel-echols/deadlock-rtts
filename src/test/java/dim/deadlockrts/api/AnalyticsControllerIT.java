@@ -62,7 +62,7 @@ class AnalyticsControllerIT {
         heroRepository.deleteAll();
 
         heroRepository.save(new Hero(1, "hero_infernus", "Infernus"));
-        itemRepository.save(new Item(10, "upgrade_extra_health", "Extra Health"));
+        itemRepository.save(new Item(4204808176L, "upgrade_extra_health", "Extra Health"));
 
         Patch p1 = patchRepository.save(new Patch(6630));
         Patch p2 = patchRepository.save(new Patch(6637));
@@ -86,7 +86,7 @@ class AnalyticsControllerIT {
         jdbc.update("""
                 INSERT INTO item_stats_snapshot
                     (snapshot_date,patch_id,item_id,rank_bucket,matches,wins,losses,players,win_rate,avg_buy_time_s)
-                VALUES (?,?,10,0,500,260,240,400,0.52000,825.000)
+                VALUES (?,?,4204808176,0,500,260,240,400,0.52000,825.000)
                 """, day2, patch2Id);
 
         jdbc.execute("REFRESH MATERIALIZED VIEW hero_movers");
@@ -103,7 +103,7 @@ class AnalyticsControllerIT {
 
     @Test
     void itemTrend_returnsSeries() throws Exception {
-        mockMvc.perform(get("/api/items/10/trend"))
+        mockMvc.perform(get("/api/items/4204808176/trend"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].winRate").value(0.52));

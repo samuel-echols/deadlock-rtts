@@ -48,7 +48,7 @@
   - `account_ids` (array[int32]) — filter by specific players, max 1000
 - Response: array of `ItemStats` objects
 - Confirmed response fields (verified 2026-07-22 against live API):
-  - `item_id` (int), `bucket` (int), `wins` (int), `losses` (int), `matches` (int), `players` (int)
+  - `item_id` (int64 — exceeds INT range), `bucket` (int), `wins` (int), `losses` (int), `matches` (int), `players` (int)
   - `avg_buy_time_s` (double), `avg_sell_time_s` (double), `avg_buy_time_relative` (double), `avg_sell_time_relative` (double)
   - No pre-computed `win_rate` — derive as `wins/matches`
 - Maps to DTO: `ItemStatsDto` → fact table `item_stats_snapshot`
@@ -66,7 +66,8 @@
 - Path: `GET /v1/assets/heroes`
 - Query params: `language` (string, optional), `client_version` (int32, optional)
 - Response: array of Hero objects
-- Response fields we consume: `hero_id` (integer), `class_name` (string), `display_name` (string)
+- Response fields we consume (verified 2026-10-28 against live API): `id` (int — the hero_id used in analytics), `class_name` (string), `name` (string — display name)
+- NOT `hero_id`/`display_name` — the earlier mapping was wrong and silently skipped every hero
 - Maps to DTO: `HeroAssetDto` → dimension table `heroes`
 - Refresh occasionally — data changes only on patches
 
@@ -74,7 +75,9 @@
 - Path: `GET /v1/assets/items`
 - Query params: `language` (string, optional), `client_version` (int32, optional)
 - Response: array of Item objects
-- Response fields we consume: `item_id` (integer), `class_name` (string), `display_name` (string)
+- Response fields we consume (verified 2026-10-28 against live API): `id` (int64 — matches `item_id` in item-stats), `class_name` (string), `name` (string — display name)
+- IDs exceed INT range (e.g. 4204808176) — use `Long` / `BIGINT`
+- Includes abilities as well as shop items (~780 entries); every item-stats `item_id` was present here
 - Maps to DTO: `ItemAssetDto` → dimension table `items`
 - Refresh occasionally — data changes only on patches
 
@@ -104,5 +107,6 @@
 
 - No dedicated patch notes endpoint — use `/v1/assets/client-versions` integers as patch IDs
 - Hero/item asset endpoints accept `client_version` to retrieve patch-specific metadata
+- Asset endpoints use `id`/`name`, analytics endpoints use `hero_id`/`item_id` — don't assume they match
 - Field names in analytics responses may drift between Valve patches — revalidate DTO mapping after major updates
 - `win_rate` / `pick_rate` may be pre-computed or may need deriving from raw counts; always store raw numerators and denominators regardless

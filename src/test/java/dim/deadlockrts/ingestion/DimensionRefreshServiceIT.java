@@ -60,8 +60,8 @@ class DimensionRefreshServiceIT {
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/heroes"))
                 .willReturn(okJson("""
                         [
-                          {"hero_id": 1, "class_name": "hero_infernus", "display_name": "Infernus"},
-                          {"hero_id": 2, "class_name": "hero_bebop",    "display_name": "Bebop"}
+                          {"id": 1, "class_name": "hero_infernus", "name": "Infernus"},
+                          {"id": 2, "class_name": "hero_bebop",    "name": "Bebop"}
                         ]
                         """)));
 
@@ -80,7 +80,7 @@ class DimensionRefreshServiceIT {
     void refreshHeroes_isIdempotent() {
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/heroes"))
                 .willReturn(okJson("""
-                        [{"hero_id": 1, "class_name": "hero_infernus", "display_name": "Infernus"}]
+                        [{"id": 1, "class_name": "hero_infernus", "name": "Infernus"}]
                         """)));
 
         refreshService.refreshHeroes();
@@ -94,15 +94,15 @@ class DimensionRefreshServiceIT {
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/items"))
                 .willReturn(okJson("""
                         [
-                          {"item_id": 10, "class_name": "upgrade_extra_health",   "display_name": "Extra Health"},
-                          {"item_id": 11, "class_name": "upgrade_extra_stamina",  "display_name": "Extra Stamina"}
+                          {"id": 4204808176, "class_name": "upgrade_extra_health",   "name": "Extra Health"},
+                          {"id": 11, "class_name": "upgrade_extra_stamina",  "name": "Extra Stamina"}
                         ]
                         """)));
 
         refreshService.refreshItems();
 
         assertThat(itemRepository.count()).isEqualTo(2);
-        assertThat(itemRepository.findById(10))
+        assertThat(itemRepository.findById(4204808176L))
                 .isPresent()
                 .hasValueSatisfying(i -> assertThat(i.getDisplayName()).isEqualTo("Extra Health"));
     }
@@ -111,7 +111,7 @@ class DimensionRefreshServiceIT {
     void refreshItems_isIdempotent() {
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/items"))
                 .willReturn(okJson("""
-                        [{"item_id": 10, "class_name": "upgrade_extra_health", "display_name": "Extra Health"}]
+                        [{"id": 4204808176, "class_name": "upgrade_extra_health", "name": "Extra Health"}]
                         """)));
 
         refreshService.refreshItems();
@@ -125,8 +125,8 @@ class DimensionRefreshServiceIT {
         wireMock.stubFor(get(urlPathEqualTo("/v1/assets/heroes"))
                 .willReturn(okJson("""
                         [
-                          {"hero_id": 1,    "class_name": "hero_infernus", "display_name": "Infernus"},
-                          {"hero_id": null, "class_name": "hero_unknown",  "display_name": "Unknown"}
+                          {"id": 1,    "class_name": "hero_infernus", "name": "Infernus"},
+                          {"id": null, "class_name": "hero_unknown",  "name": "Unknown"}
                         ]
                         """)));
 

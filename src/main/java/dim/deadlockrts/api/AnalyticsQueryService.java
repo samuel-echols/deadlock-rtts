@@ -36,7 +36,7 @@ public class AnalyticsQueryService {
                 heroId);
     }
 
-    public List<ItemTrendPoint> itemTrend(int itemId) {
+    public List<ItemTrendPoint> itemTrend(long itemId) {
         return jdbc.query("""
                 SELECT s.snapshot_date, s.patch_id, p.build_number, s.matches, s.wins, s.losses,
                        s.win_rate, s.avg_buy_time_s

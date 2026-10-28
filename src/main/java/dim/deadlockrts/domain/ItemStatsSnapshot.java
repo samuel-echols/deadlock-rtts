@@ -20,7 +20,7 @@ public class ItemStatsSnapshot {
     private Integer patchId;
 
     @Column(name = "item_id", nullable = false)
-    private Integer itemId;
+    private Long itemId;
 
     @Column(name = "rank_bucket", nullable = false)
     private Short rankBucket;
@@ -45,7 +45,7 @@ public class ItemStatsSnapshot {
 
     protected ItemStatsSnapshot() {}
 
-    public ItemStatsSnapshot(LocalDate snapshotDate, Integer patchId, Integer itemId,
+    public ItemStatsSnapshot(LocalDate snapshotDate, Integer patchId, Long itemId,
                               Short rankBucket, Integer matches, Integer wins, Integer losses,
                               Integer players, BigDecimal winRate, BigDecimal avgBuyTimeS) {
         this.snapshotDate = snapshotDate;
@@ -63,7 +63,7 @@ public class ItemStatsSnapshot {
     public Long getId() { return id; }
     public LocalDate getSnapshotDate() { return snapshotDate; }
     public Integer getPatchId() { return patchId; }
-    public Integer getItemId() { return itemId; }
+    public Long getItemId() { return itemId; }
     public Short getRankBucket() { return rankBucket; }
     public Integer getMatches() { return matches; }
     public Integer getWins() { return wins; }

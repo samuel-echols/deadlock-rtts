@@ -3,7 +3,7 @@ package dim.deadlockrts.client;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record ItemStatsDto(
-        @JsonProperty("item_id")       Integer itemId,
+        @JsonProperty("item_id")       Long itemId,
         @JsonProperty("bucket")        Integer bucket,
         @JsonProperty("wins")          Integer wins,
         @JsonProperty("losses")        Integer losses,

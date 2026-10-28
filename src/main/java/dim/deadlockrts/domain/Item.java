@@ -11,7 +11,7 @@ public class Item {
 
     @Id
     @Column(name = "item_id")
-    private Integer itemId;
+    private Long itemId;
 
     @Column(name = "class_name", nullable = false, length = 100)
     private String className;
@@ -21,13 +21,13 @@ public class Item {
 
     protected Item() {}
 
-    public Item(Integer itemId, String className, String displayName) {
+    public Item(Long itemId, String className, String displayName) {
         this.itemId = itemId;
         this.className = className;
         this.displayName = displayName;
     }
 
-    public Integer getItemId() { return itemId; }
+    public Long getItemId() { return itemId; }
     public String getClassName() { return className; }
     public String getDisplayName() { return displayName; }
 

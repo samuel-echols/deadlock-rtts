@@ -23,7 +23,7 @@ public class AnalyticsController {
 
     @GetMapping("/items/{itemId}/trend")
     @Cacheable("itemTrend")
-    public List<AnalyticsQueryService.ItemTrendPoint> itemTrend(@PathVariable int itemId) {
+    public List<AnalyticsQueryService.ItemTrendPoint> itemTrend(@PathVariable long itemId) {
         return queryService.itemTrend(itemId);
     }
 
